@@ -6,30 +6,9 @@
   <title>Waiz Mini Mart</title>
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 50px;
-      background: #f5f5f5;
-    }
-    button {
-      padding: 12px 25px;
-      background: #6C3483;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      margin: 10px;
-    }
-    button:hover {
-      background: #5B2C6F;
-    }
-    #user {
-      margin-top: 20px;
-      font-size: 18px;
-      color: #333;
-    }
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f5f5f5; }
+    button { padding: 12px 25px; background: #6C3483; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
+    #user { margin-top: 20px; font-size: 18px; color: #333; }
   </style>
 </head>
 <body>
@@ -37,25 +16,33 @@
   <p>Welcome to Pi App!</p>
   
   <button onclick="auth()">Login with Pi</button>
-  
   <div id="user"></div>
-  
-  <div>
-    <button onclick="pay()">Test Payment 0.01 Pi</button>
-  </div>
+  <button onclick="pay()">Test Payment 0.01 Pi</button>
 
   <script>
-    Pi.init({ version: "2.0", sandbox: true });
+    if (typeof Pi === 'undefined') {
+      alert("Pi SDK not loaded! Tum Pi Browser me nahi ho, ya internet nahi hai.");
+    } else {
+      Pi.init({ version: "2.0", sandbox: true });
+    }
 
     function auth() {
+      if (typeof Pi === 'undefined') {
+        alert("Pi Browser me kholo pehle");
+        return;
+      }
       Pi.authenticate(['username'], function(auth) {
         document.getElementById('user').innerText = "Hello " + auth.user.username;
       }, function(error) {
-        alert("Error: " + error);
+        alert("Login Error: " + error);
       });
     }
 
     function pay() {
+      if (typeof Pi === 'undefined') {
+        alert("Pi Browser me kholo pehle");
+        return;
+      }
       Pi.createPayment({
         amount: 0.01,
         memo: "Step 10 test",
