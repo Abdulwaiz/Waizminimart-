@@ -1,4 +1,6 @@
-'Keyng="en">
+
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,6 +27,8 @@
 
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <script>
+        const API_KEY = "hvszjtdzp9qvs4suta4hh136edkht3an5hpsslfvn2dc4eyd0jsnobmgaxizrx6x";
+
         window.addEventListener('load', function() {
             setTimeout(function() {
                 if (typeof Pi === 'undefined') {
@@ -38,14 +42,10 @@
             }, 1500);
         });
 
-        function onIncompletePaymentFound(payment) {
-            console.log("Incomplete payment:", payment);
-        }
-
         function auth() {
             document.getElementById('user').innerText = 'Logging in...';
             if (typeof Pi === 'undefined') return;
-            Pi.authenticate(['username', 'payments'], onIncompletePaymentFound).then(function(auth) {
+            Pi.authenticate(['username', 'payments'], () => {}).then(function(auth) {
                 document.getElementById('user').innerText = 'Logged in as: ' + auth.user.username;
             }).catch(function(error) {
                 document.getElementById('user').innerText = 'Login failed';
@@ -58,39 +58,48 @@
             
             Pi.createPayment({
                 amount: 0.01,
-                memo: "Step 10 Mainnet Test",
-                metadata: { test: true }
+                memo: "Step 10 Mainnet Test Payment",
+                metadata: { test: true, app: "WAIZMINIMART" }
             }, {
                 onReadyForServerApproval: function(paymentId) {
-                    document.getElementById('status').innerText = 'Approving...';
+                    console.log("Approving:", paymentId);
+                    document.getElementById('status').innerText = 'Approving payment...';
                     fetch('https://api.minepi.com/v2/payments/' + paymentId + '/approve', {
                         method: 'POST',
                         headers: {
-                            'Authorization': 'Key PASTE_YOUR_MAINNET_
+                            'Authorization': 'Key ' + API_KEY,
                             'Content-Type': 'application/json'
                         }
-                    });
+                    }).then(res => console.log("Approve:", res))
+                    .catch(err => console.error("Approve Error:", err));
                 },
                 onReadyForServerCompletion: function(paymentId, txid) {
-                    document.getElementById('status').innerText = 'Completing...';
+                    console.log("Completing:", paymentId, txid);
+                    document.getElementById('status').innerText = 'Completing payment...';
                     fetch('https://api.minepi.com/v2/payments/' + paymentId + '/complete', {
                         method: 'POST',
                         headers: {
-                            'Authorization': 'Key PASTE_YOUR_MAINNET_API_KEY_HERE',"hvszjtdzp9qvs4suta4hh136edkht3an5hpsslfvn2dc4eyd0jsnobmgaxizrx6x
+                            'Authorization': 'Key ' + API_KEY,
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({ txid: txid })
                     }).then(res => {
-                        document.getElementById('status').innerText = 'Payment Complete! ✅ Check Step 10';
+                        console.log("Complete:", res);
+                        document.getElementById('status').innerText = 'Payment Complete! ✅ Check Step 10 Now';
                         document.getElementById('status').style.background = '#d4edda';
-                        alert("Done! Now check Checklist Step 10");
+                        alert("Success! 3 min me Checklist check karo. Step 10 green ho jayega.");
+                    }).catch(err => {
+                        console.error("Complete Error:", err);
+                        document.getElementById('status').innerText = 'Complete Error: ' + err;
                     });
                 },
                 onCancel: function(paymentId) {
-                    document.getElementById('status').innerText = 'Cancelled - Try again and Confirm';
+                    console.log("Cancelled:", paymentId);
+                    document.getElementById('status').innerText = 'Cancelled - Dobara Try Karo aur Confirm Dabao';
                     document.getElementById('status').style.background = '#fff3cd';
                 },
                 onError: function(error, payment) {
+                    console.error("Payment Error:", error);
                     document.getElementById('status').innerText = 'Error: ' + error;
                     document.getElementById('status').style.background = '#f8d7da';
                 }
