@@ -4,27 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Waiz Mini Mart</title>
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f5f5f5; }
-    button { padding: 12px 25px; background: #6C3483; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
-    #user { margin-top: 20px; font-size: 18px; color: #333; }
+    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    button { padding: 12px 25px; background: #6B46C1; color: white; border: none; border-radius: 8px; font-size: 16px; margin: 10px; }
+    #user { margin-top: 20px; font-size: 18px; }
   </style>
 </head>
 <body>
   <h2>🛒 Waiz Mini Mart</h2>
   <p>Welcome to Pi App!</p>
-  
+
   <button onclick="auth()">Login with Pi</button>
   <div id="user"></div>
   <button onclick="pay()">Test Payment 0.01 Pi</button>
 
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <script>
-    if (typeof Pi === 'undefined') {
-      alert("Pi SDK not loaded! Tum Pi Browser me nahi ho, ya internet nahi hai.");
-    } else {
-      Pi.init({ version: "2.0", sandbox: true });
-    }
+    // 1 second wait karo taake SDK load ho jaye
+    setTimeout(function() {
+      if (typeof Pi === 'undefined') {
+        alert("Pi SDK not loaded! Pi Browser se hi kholo aur 5 sec wait karo.");
+      } else {
+        Pi.init({ version: "2.0", sandbox: true });
+        alert("SUCCESS: Pi SDK ready hai!");
+      }
+    }, 1000);
 
     function auth() {
       if (typeof Pi === 'undefined') {
@@ -32,7 +36,7 @@
         return;
       }
       Pi.authenticate(['username'], function(auth) {
-        document.getElementById('user').innerText = "Hello " + auth.user.username;
+        document.getElementById('user').innerText = 'Logged in: ' + auth.user.username;
       }, function(error) {
         alert("Login Error: " + error);
       });
