@@ -3,55 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAIZMINIMART - Pi Payment Test</title>
+    <title>WAIZMINIMART</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #6f42c1;
-            margin-bottom: 10px;
-        }
-        p {
-            color: #666;
-        }
-        #status {
-            margin: 20px 0;
-            padding: 10px;
-            border-radius: 5px;
-            background: #e9ecef;
-            font-weight: bold;
-        }
-        button {
-            background: #6f42c1;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin: 10px;
-            width: 80%;
-        }
-        button:hover {
-            background: #5a32a3;
-        }
-        #user {
-            margin: 15px 0;
-            font-weight: bold;
-            color: #28a745;
-        }
+        body{font-family:Arial,sans-serif;text-align:center;padding:20px;background:#f5f5f5}
+        .container{max-width:400px;margin:0 auto;background:white;padding:30px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+        h1{color:#6f42c1;margin-bottom:10px}
+        #status{margin:20px 0;padding:10px;border-radius:5px;background:#e9ecef;font-weight:bold}
+        button{background:#6f42c1;color:white;border:none;padding:15px 30px;font-size:16px;border-radius:8px;cursor:pointer;margin:10px;width:80%}
+        button:hover{background:#5a32a3}
+        #user{margin:15px 0;font-weight:bold;color:#28a745}
     </style>
 </head>
 <body>
@@ -59,10 +19,8 @@
         <h1>WAIZMINIMART</h1>
         <p>Welcome to Pi App!</p>
         <div id="status">Loading Pi SDK...</div>
-        
         <button onclick="auth()">Login with Pi</button>
         <div id="user"></div>
-        
         <button onclick="pay()">Test Payment 0.01 Pi</button>
     </div>
 
@@ -71,10 +29,10 @@
         window.addEventListener('load', function() {
             setTimeout(function() {
                 if (typeof Pi === 'undefined') {
-                    document.getElementById('status').innerText = 'Pi SDK failed to load. Open in Pi Browser.';
+                    document.getElementById('status').innerText = 'Open in Pi Browser';
                     document.getElementById('status').style.background = '#f8d7da';
                 } else {
-                    Pi.init({ version: "2.0", sandbox: true });
+                    Pi.init({ version: "2.0", sandbox: false });
                     document.getElementById('status').innerText = 'Pi SDK Ready ✅';
                     document.getElementById('status').style.background = '#d4edda';
                 }
@@ -82,93 +40,60 @@
         });
 
         function onIncompletePaymentFound(payment) {
-            console.log("Incomplete payment found:", payment);
+            console.log("Incomplete payment:", payment);
         }
 
         function auth() {
             document.getElementById('user').innerText = 'Logging in...';
-            
-            if (typeof Pi === 'undefined') {
-                document.getElementById('user').innerText = 'Pi SDK not found. Use Pi Browser.';
-                return;
-            }
-
-            const scopes = ['username', 'payments'];
-            
-            Pi.authenticate(scopes, onIncompletePaymentFound).then(function(auth) {
-                console.log("Auth success:", auth);
+            if (typeof Pi === 'undefined') return;
+            Pi.authenticate(['username', 'payments'], onIncompletePaymentFound).then(function(auth) {
                 document.getElementById('user').innerText = 'Logged in as: ' + auth.user.username;
             }).catch(function(error) {
-                console.error("Auth error:", error);
-                document.getElementById('user').innerText = 'Login failed: ' + error;
+                document.getElementById('user').innerText = 'Login failed';
             });
         }
 
         function pay() {
-            if (typeof Pi === 'undefined') {
-                alert("Pi SDK not loaded. Open this page in Pi Browser.");
-                return;
-            }
-
+            if (typeof Pi === 'undefined') return alert("Use Pi Browser");
             document.getElementById('status').innerText = 'Creating payment...';
             
             Pi.createPayment({
                 amount: 0.01,
-                memo: "Step 10 Test Payment for Mainnet",
-                metadata: { test: true, app: "WAIZMINIMART" }
+                memo: "Step 10 Mainnet Test",
+                metadata: { test: true }
             }, {
                 onReadyForServerApproval: function(paymentId) {
-                    console.log("Approving payment:", paymentId);
-                    document.getElementById('status').innerText = 'Approving payment...';
-                    
-                    // YAHAN APNI TESTNET API KEY DAALO - 1st time
-                    fetch('https://api.testnet.minepi.com/v2/payments/' + paymentId + '/approve', {
+                    document.getElementById('status').innerText = 'Approving...';
+                    fetch('https://api.minepi.com/v2/payments/' + paymentId + '/approve', {
                         method: 'POST',
                         headers: {
-                            'Authorization': 'Key PASTE_YOUR_TESTNET_API_KEY_HERE',
+                            'Authorization': 'Key PASTE_YOUR_MAINNET_API_KEY_HERE',
                             'Content-Type': 'application/json'
                         }
-                    }).then(response => {
-                        console.log("Approve response:", response);
-                    }).catch(err => {
-                        console.error("Approve error:", err);
                     });
                 },
-                
                 onReadyForServerCompletion: function(paymentId, txid) {
-                    console.log("Completing payment:", paymentId, txid);
-                    document.getElementById('status').innerText = 'Completing payment...';
-                    
-                    // YAHAN APNI TESTNET API KEY DAALO - 2nd time
-                    fetch('https://api.testnet.minepi.com/v2/payments/' + paymentId + '/complete', {
+                    document.getElementById('status').innerText = 'Completing...';
+                    fetch('https://api.minepi.com/v2/payments/' + paymentId + '/complete', {
                         method: 'POST',
                         headers: {
-                            'Authorization': 'Key PASTE_YOUR_TESTNET_API_KEY_HERE',
+                            'Authorization': 'Key PASTE_YOUR_MAINNET_API_KEY_HERE',
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({ txid: txid })
-                    }).then(response => {
-                        console.log("Complete response:", response);
-                        document.getElementById('status').innerText = 'Payment Test Complete! ✅ Check Step 10 now.';
+                    }).then(res => {
+                        document.getElementById('status').innerText = 'Payment Complete! ✅ Check Step 10';
                         document.getElementById('status').style.background = '#d4edda';
-                        alert("Success! Step 10 should complete now. Go check Developer Portal Checklist.");
-                    }).catch(err => {
-                        console.error("Complete error:", err);
+                        alert("Done! Now check Checklist Step 10");
                     });
                 },
-                
                 onCancel: function(paymentId) {
-                    console.log("Payment cancelled:", paymentId);
-                    document.getElementById('status').innerText = 'Payment Cancelled. This is OK for Step 10 ✅';
+                    document.getElementById('status').innerText = 'Cancelled - Try again and Confirm';
                     document.getElementById('status').style.background = '#fff3cd';
-                    alert("Payment Cancelled - Ye bhi Step 10 ke liye theek hai. Checklist check karo.");
                 },
-                
                 onError: function(error, payment) {
-                    console.error("Payment error:", error);
                     document.getElementById('status').innerText = 'Error: ' + error;
                     document.getElementById('status').style.background = '#f8d7da';
-                    alert("Error: " + error);
                 }
             });
         }
