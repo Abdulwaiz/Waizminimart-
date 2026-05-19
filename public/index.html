@@ -22,11 +22,10 @@
 
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <script>
-    // Page load hone ke baad check karo
     window.addEventListener('load', function() {
       setTimeout(function() {
         if (typeof Pi === 'undefined') {
-          document.getElementById('status').innerText = 'ERROR: Pi SDK not loaded. Pi Browser se kholo.';
+          document.getElementById('status').innerText = 'ERROR: Pi Browser se kholo';
           document.getElementById('status').style.color = 'red';
         } else {
           Pi.init({ version: "2.0", sandbox: true });
@@ -36,6 +35,10 @@
       }, 1500);
     });
 
+    function onIncompletePaymentFound(payment) {
+      console.log("Incomplete payment found:", payment);
+    }
+
     function auth() {
       document.getElementById('user').innerText = 'Login ho raha hai...';
       
@@ -44,10 +47,13 @@
         return;
       }
       
-      Pi.authenticate(['username'], function(auth) {
+      const scopes = ['username', 'payments'];
+      
+      Pi.authenticate(scopes, onIncompletePaymentFound).then(function(auth) {
         document.getElementById('user').innerText = 'Logged in: ' + auth.user.username;
-      }, function(error) {
+      }).catch(function(error) {
         document.getElementById('user').innerText = 'Login Error: ' + error;
+        console.error(error);
       });
     }
 
@@ -59,10 +65,10 @@
       Pi.createPayment({
         amount: 0.01,
         memo: "Step 10 test",
-        metadata: {purpose: "test"}
+        metadata: { test: "true" }
       }, {
-        onReadyForServerApproval: function(paymentId) { console.log(paymentId); },
-        onReadyForServerCompletion: function(paymentId, txid) { alert('Payment Success!'); },
+        onReadyForServerApproval: function(paymentId) { console.log("Approve:", paymentId); },
+        onReadyForServerCompletion: function(paymentId, txid) { alert('Payment Success! Txid: ' + txid); },
         onCancel: function(paymentId) { alert('Payment Cancelled'); },
         onError: function(error, payment) { alert('Payment Error: ' + error); }
       });
