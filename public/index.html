@@ -1,78 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Waiz Mini Mart</title>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-    button { padding: 12px 25px; background: #6B46C1; color: white; border: none; border-radius: 8px; font-size: 16px; margin: 10px; cursor: pointer; }
-    #user { margin-top: 20px; font-size: 18px; font-weight: bold; }
-    #status { margin-top: 15px; color: green; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAIZMINIMART - Pi Payment Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #6f42c1;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #666;
+        }
+        #status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background: #e9ecef;
+            font-weight: bold;
+        }
+        button {
+            background: #6f42c1;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            width: 80%;
+        }
+        button:hover {
+            background: #5a32a3;
+        }
+        #user {
+            margin: 15px 0;
+            font-weight: bold;
+            color: #28a745;
+        }
+    </style>
 </head>
 <body>
-  <h2>🛒 Waiz Mini Mart</h2>
-  <p>Welcome to Pi App!</p>
-  <div id="status">Loading Pi SDK...</div>
+    <div class="container">
+        <h1>WAIZMINIMART</h1>
+        <p>Welcome to Pi App!</p>
+        <div id="status">Loading Pi SDK...</div>
+        
+        <button onclick="auth()">Login with Pi</button>
+        <div id="user"></div>
+        
+        <button onclick="pay()">Test Payment 0.01 Pi</button>
+    </div>
 
-  <button onclick="auth()">Login with Pi</button>
-  <div id="user"></div>
-  <button onclick="pay()">Test Payment 0.01 Pi</button>
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script>
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                if (typeof Pi === 'undefined') {
+                    document.getElementById('status').innerText = 'Pi SDK failed to load. Open in Pi Browser.';
+                    document.getElementById('status').style.background = '#f8d7da';
+                } else {
+                    Pi.init({ version: "2.0", sandbox: true });
+                    document.getElementById('status').innerText = 'Pi SDK Ready ✅';
+                    document.getElementById('status').style.background = '#d4edda';
+                }
+            }, 1500);
+        });
 
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-  <script>
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        if (typeof Pi === 'undefined') {
-          document.getElementById('status').innerText = 'ERROR: Pi Browser se kholo';
-          document.getElementById('status').style.color = 'red';
-        } else {
-          Pi.init({ version: "2.0", sandbox: true });
-          document.getElementById('status').innerText = 'SUCCESS: Pi SDK Ready! Ab buttons dabao.';
-          document.getElementById('status').style.color = 'green';
+        function onIncompletePaymentFound(payment) {
+            console.log("Incomplete payment found:", payment);
         }
-      }, 1500);
-    });
 
-    function onIncompletePaymentFound(payment) {
-      console.log("Incomplete payment found:", payment);
-    }
+        function auth() {
+            document.getElementById('user').innerText = 'Logging in...';
+            
+            if (typeof Pi === 'undefined') {
+                document.getElementById('user').innerText = 'Pi SDK not found. Use Pi Browser.';
+                return;
+            }
 
-    function auth() {
-      document.getElementById('user').innerText = 'Login ho raha hai...';
-      
-      if (typeof Pi === 'undefined') {
-        document.getElementById('user').innerText = 'ERROR: Pi object nahi mila';
-        return;
-      }
-      
-      const scopes = ['username', 'payments'];
-      
-      Pi.authenticate(scopes, onIncompletePaymentFound).then(function(auth) {
-        document.getElementById('user').innerText = 'Logged in: ' + auth.user.username;
-      }).catch(function(error) {
-        document.getElementById('user').innerText = 'Login Error: ' + error;
-        console.error(error);
-      });
-    }
+            const scopes = ['username', 'payments'];
+            
+            Pi.authenticate(scopes, onIncompletePaymentFound).then(function(auth) {
+                console.log("Auth success:", auth);
+                document.getElementById('user').innerText = 'Logged in as: ' + auth.user.username;
+            }).catch(function(error) {
+                console.error("Auth error:", error);
+                document.getElementById('user').innerText = 'Login failed: ' + error;
+            });
+        }
 
-    function pay() {
-      if (typeof Pi === 'undefined') {
-        alert("Pi Browser me kholo pehle");
-        return;
-      }
-      Pi.createPayment({
-        amount: 0.01,
-        memo: "Step 10 test",
-        metadata: { test: "true" }
-      }, {
-        onReadyForServerApproval: function(paymentId) { console.log("Approve:", paymentId); },
-        onReadyForServerCompletion: function(paymentId, txid) { alert('Payment Success! Txid: ' + txid); },
-        onCancel: function(paymentId) { alert('Payment Cancelled'); },
-        onError: function(error, payment) { alert('Payment Error: ' + error); }
-      });
-    }
-  </script>
+        function pay() {
+            if (typeof Pi === 'undefined') {
+                alert("Pi SDK not loaded. Open this page in Pi Browser.");
+                return;
+            }
+
+            document.getElementById('status').innerText = 'Creating payment...';
+            
+            Pi.createPayment({
+                amount: 0.01,
+                memo: "Step 10 Test Payment for Mainnet",
+                metadata: { test: true, app: "WAIZMINIMART" }
+            }, {
+                onReadyForServerApproval: function(paymentId) {
+                    console.log("Approving payment:", paymentId);
+                    document.getElementById('status').innerText = 'Approving payment...';
+                    
+                    // YAHAN APNI TESTNET API KEY DAALO - 1st time
+                    fetch('https://api.testnet.minepi.com/v2/payments/' + paymentId + '/approve', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Key PASTE_YOUR_TESTNET_API_KEY_HERE',
+                            'Content-Type': 'application/json'
+                        }
+                    }).then(response => {
+                        console.log("Approve response:", response);
+                    }).catch(err => {
+                        console.error("Approve error:", err);
+                    });
+                },
+                
+                onReadyForServerCompletion: function(paymentId, txid) {
+                    console.log("Completing payment:", paymentId, txid);
+                    document.getElementById('status').innerText = 'Completing payment...';
+                    
+                    // YAHAN APNI TESTNET API KEY DAALO - 2nd time
+                    fetch('https://api.testnet.minepi.com/v2/payments/' + paymentId + '/complete', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Key PASTE_YOUR_TESTNET_API_KEY_HERE',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ txid: txid })
+                    }).then(response => {
+                        console.log("Complete response:", response);
+                        document.getElementById('status').innerText = 'Payment Test Complete! ✅ Check Step 10 now.';
+                        document.getElementById('status').style.background = '#d4edda';
+                        alert("Success! Step 10 should complete now. Go check Developer Portal Checklist.");
+                    }).catch(err => {
+                        console.error("Complete error:", err);
+                    });
+                },
+                
+                onCancel: function(paymentId) {
+                    console.log("Payment cancelled:", paymentId);
+                    document.getElementById('status').innerText = 'Payment Cancelled. This is OK for Step 10 ✅';
+                    document.getElementById('status').style.background = '#fff3cd';
+                    alert("Payment Cancelled - Ye bhi Step 10 ke liye theek hai. Checklist check karo.");
+                },
+                
+                onError: function(error, payment) {
+                    console.error("Payment error:", error);
+                    document.getElementById('status').innerText = 'Error: ' + error;
+                    document.getElementById('status').style.background = '#f8d7da';
+                    alert("Error: " + error);
+                }
+            });
+        }
+    </script>
 </body>
 </html>
