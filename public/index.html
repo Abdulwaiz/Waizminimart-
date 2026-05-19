@@ -6,13 +6,15 @@
   <title>Waiz Mini Mart</title>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-    button { padding: 12px 25px; background: #6B46C1; color: white; border: none; border-radius: 8px; font-size: 16px; margin: 10px; }
-    #user { margin-top: 20px; font-size: 18px; }
+    button { padding: 12px 25px; background: #6B46C1; color: white; border: none; border-radius: 8px; font-size: 16px; margin: 10px; cursor: pointer; }
+    #user { margin-top: 20px; font-size: 18px; font-weight: bold; }
+    #status { margin-top: 15px; color: green; }
   </style>
 </head>
 <body>
   <h2>🛒 Waiz Mini Mart</h2>
   <p>Welcome to Pi App!</p>
+  <div id="status">Loading Pi SDK...</div>
 
   <button onclick="auth()">Login with Pi</button>
   <div id="user"></div>
@@ -20,25 +22,32 @@
 
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <script>
-    // 1 second wait karo taake SDK load ho jaye
-    setTimeout(function() {
-      if (typeof Pi === 'undefined') {
-        alert("Pi SDK not loaded! Pi Browser se hi kholo aur 5 sec wait karo.");
-      } else {
-        Pi.init({ version: "2.0", sandbox: true });
-        alert("SUCCESS: Pi SDK ready hai!");
-      }
-    }, 1000);
+    // Page load hone ke baad check karo
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        if (typeof Pi === 'undefined') {
+          document.getElementById('status').innerText = 'ERROR: Pi SDK not loaded. Pi Browser se kholo.';
+          document.getElementById('status').style.color = 'red';
+        } else {
+          Pi.init({ version: "2.0", sandbox: true });
+          document.getElementById('status').innerText = 'SUCCESS: Pi SDK Ready! Ab buttons dabao.';
+          document.getElementById('status').style.color = 'green';
+        }
+      }, 1500);
+    });
 
     function auth() {
+      document.getElementById('user').innerText = 'Login ho raha hai...';
+      
       if (typeof Pi === 'undefined') {
-        alert("Pi Browser me kholo pehle");
+        document.getElementById('user').innerText = 'ERROR: Pi object nahi mila';
         return;
       }
+      
       Pi.authenticate(['username'], function(auth) {
         document.getElementById('user').innerText = 'Logged in: ' + auth.user.username;
       }, function(error) {
-        alert("Login Error: " + error);
+        document.getElementById('user').innerText = 'Login Error: ' + error;
       });
     }
 
@@ -51,6 +60,11 @@
         amount: 0.01,
         memo: "Step 10 test",
         metadata: {purpose: "test"}
+      }, {
+        onReadyForServerApproval: function(paymentId) { console.log(paymentId); },
+        onReadyForServerCompletion: function(paymentId, txid) { alert('Payment Success!'); },
+        onCancel: function(paymentId) { alert('Payment Cancelled'); },
+        onError: function(error, payment) { alert('Payment Error: ' + error); }
       });
     }
   </script>
